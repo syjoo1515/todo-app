@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TODO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="card">
+    <div class="card-header">
+      <span class="header-deco">🌸</span>
+      <h1>TODO List</h1>
+      <span class="header-deco">🌸</span>
+    </div>
+    <div class="card-body">
+      <div class="input-area">
+        <input type="text" id="todoInput" placeholder="할 일을 입력하세요 ✏️" />
+        <button id="addBtn">+ 추가</button>
+      </div>
+      <ul id="todoList"></ul>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js"></script>
+</body>
+</html>
