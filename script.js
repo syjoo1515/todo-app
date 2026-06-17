@@ -15,6 +15,8 @@ const addBtn       = document.getElementById('addBtn');
 const todoList     = document.getElementById('todoList');
 
 let dragSrc = null;
+let currentUserId = null;
+let isLoggingOut = false;
 
 // --- 인증 UI ---
 
@@ -63,7 +65,13 @@ document.getElementById('loginPassword').addEventListener('keydown', (e) => {
 });
 
 logoutBtn.addEventListener('click', async () => {
+  isLoggingOut = true;
   await db.auth.signOut();
+  currentUserId = null;
+  todoList.innerHTML = '';
+  todoSection.classList.add('hidden');
+  authSection.classList.remove('hidden');
+  isLoggingOut = false;
 });
 
 // --- 소셜 로그인 ---
@@ -100,7 +108,10 @@ document.getElementById('githubLoginBtn').addEventListener('click', async () => 
 // --- 인증 상태 감지 ---
 
 db.auth.onAuthStateChange(async (event, session) => {
-  if (session) {
+  if (isLoggingOut) return;
+
+  if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session.user.id !== currentUserId) {
+    currentUserId = session.user.id;
     authSection.classList.add('hidden');
     todoSection.classList.remove('hidden');
     userEmailEl.textContent = session.user.email;
@@ -108,7 +119,8 @@ db.auth.onAuthStateChange(async (event, session) => {
     const { data: todos } = await db.from('todos').select('*').order('position');
     (todos || []).forEach(renderTodo);
     updatePriorityBadges();
-  } else {
+  } else if (event === 'SIGNED_OUT') {
+    currentUserId = null;
     authSection.classList.remove('hidden');
     todoSection.classList.add('hidden');
     todoList.innerHTML = '';
