@@ -66,11 +66,31 @@ logoutBtn.addEventListener('click', async () => {
   await db.auth.signOut();
 });
 
+// --- 소셜 로그인 ---
+
+const redirectTo = window.location.origin + window.location.pathname;
+
+document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+  const { error } = await db.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo },
+  });
+  if (error) authMessage.textContent = error.message;
+});
+
+document.getElementById('githubLoginBtn').addEventListener('click', async () => {
+  const { error } = await db.auth.signInWithOAuth({
+    provider: 'github',
+    options: { redirectTo },
+  });
+  if (error) authMessage.textContent = error.message;
+});
+
 // --- 이메일 인증 완료 리다이렉트 처리 ---
 
 (async () => {
   const hashParams = new URLSearchParams(window.location.hash.slice(1));
-  if (hashParams.get('type') === 'signup') {
+  if (hashParams.get('type') === 'signup' && !hashParams.get('provider_token')) {
     await db.auth.signOut();
     history.replaceState(null, '', window.location.pathname);
     alert('회원가입이 완료되었습니다. 로그인해주세요.');

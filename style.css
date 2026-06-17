@@ -358,6 +358,77 @@ h1 {
   opacity: 1;
 }
 
+/* 소셜 로그인 구분선 */
+.social-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 12px;
+  color: #c8a84b;
+  font-size: 0.85rem;
+}
+
+.social-divider::before,
+.social-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #ffe082;
+}
+
+/* 소셜 버튼 */
+.social-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 50px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 2px solid;
+}
+
+.social-btn img,
+.social-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.google-btn {
+  background: #fff;
+  color: #5d3f00;
+  border-color: #ffe082;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.google-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.github-btn {
+  background: #24292e;
+  color: #fff;
+  border-color: #24292e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.github-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
 /* hidden 유틸리티 */
 .hidden {
   display: none !important;
