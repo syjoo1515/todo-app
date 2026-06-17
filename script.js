@@ -2,11 +2,100 @@ const SUPABASE_URL = 'https://ajwpaliyibpshfueuupl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqd3BhbGl5aWJwc2hmdWV1dXBsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2Njg0MjQsImV4cCI6MjA5NzI0NDQyNH0.kVXeMeFn_8VYSBJ-YeXK8UJ-QRLBDtBK7VOlBb3HjvY';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const todoInput = document.getElementById('todoInput');
-const addBtn = document.getElementById('addBtn');
-const todoList = document.getElementById('todoList');
+// --- DOM 참조 ---
+const authSection  = document.getElementById('authSection');
+const todoSection  = document.getElementById('todoSection');
+const authMessage  = document.getElementById('authMessage');
+const loginBtn     = document.getElementById('loginBtn');
+const signupBtn    = document.getElementById('signupBtn');
+const logoutBtn    = document.getElementById('logoutBtn');
+const userEmailEl  = document.getElementById('userEmail');
+const todoInput    = document.getElementById('todoInput');
+const addBtn       = document.getElementById('addBtn');
+const todoList     = document.getElementById('todoList');
 
 let dragSrc = null;
+
+// --- 인증 UI ---
+
+document.querySelectorAll('.auth-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('loginForm').classList.toggle('hidden', tab.dataset.tab !== 'login');
+    document.getElementById('signupForm').classList.toggle('hidden', tab.dataset.tab !== 'signup');
+    authMessage.textContent = '';
+  });
+});
+
+signupBtn.addEventListener('click', async () => {
+  const email           = document.getElementById('signupEmail').value.trim();
+  const password        = document.getElementById('signupPassword').value;
+  const passwordConfirm = document.getElementById('signupPasswordConfirm').value;
+
+  if (password !== passwordConfirm) {
+    authMessage.textContent = '비밀번호가 일치하지 않습니다.';
+    return;
+  }
+  if (password.length < 6) {
+    authMessage.textContent = '비밀번호는 6자 이상이어야 합니다.';
+    return;
+  }
+
+  const { error } = await db.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: window.location.origin },
+  });
+  if (error) { authMessage.textContent = error.message; return; }
+  authMessage.textContent = '✉️ 이메일로 인증 링크를 보냈습니다. 인증 후 로그인해주세요.';
+});
+
+loginBtn.addEventListener('click', async () => {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const { error } = await db.auth.signInWithPassword({ email, password });
+  if (error) { authMessage.textContent = error.message; }
+});
+
+document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') loginBtn.click();
+});
+
+logoutBtn.addEventListener('click', async () => {
+  await db.auth.signOut();
+});
+
+// --- 이메일 인증 완료 리다이렉트 처리 ---
+
+(async () => {
+  const hashParams = new URLSearchParams(window.location.hash.slice(1));
+  if (hashParams.get('type') === 'signup') {
+    await db.auth.signOut();
+    history.replaceState(null, '', window.location.pathname);
+    alert('회원가입이 완료되었습니다. 로그인해주세요.');
+  }
+})();
+
+// --- 인증 상태 감지 ---
+
+db.auth.onAuthStateChange(async (event, session) => {
+  if (session) {
+    authSection.classList.add('hidden');
+    todoSection.classList.remove('hidden');
+    userEmailEl.textContent = session.user.email;
+    todoList.innerHTML = '';
+    const { data: todos } = await db.from('todos').select('*').order('position');
+    (todos || []).forEach(renderTodo);
+    updatePriorityBadges();
+  } else {
+    authSection.classList.remove('hidden');
+    todoSection.classList.add('hidden');
+    todoList.innerHTML = '';
+  }
+});
+
+// --- TODO 로직 ---
 
 function getOrderedIds() {
   return [...todoList.querySelectorAll('li')].map(li => li.dataset.id);
@@ -24,9 +113,7 @@ function updatePriorityBadges() {
   const items = todoList.querySelectorAll('li');
   items.forEach((li, index) => {
     const badge = li.querySelector('.priority-badge');
-    if (badge) {
-      badge.textContent = `${index + 1}위`;
-    }
+    if (badge) badge.textContent = `${index + 1}위`;
   });
 }
 
@@ -115,8 +202,11 @@ async function addTodo() {
   const text = todoInput.value.trim();
   if (!text) return;
 
+  const { data: { session } } = await db.auth.getSession();
   const position = todoList.querySelectorAll('li').length;
-  const { data, error } = await db.from('todos').insert({ text, position }).select().single();
+  const { data, error } = await db.from('todos')
+    .insert({ text, position, user_id: session.user.id })
+    .select().single();
   if (error) { console.error(error); return; }
 
   renderTodo(data);
@@ -131,9 +221,3 @@ addBtn.addEventListener('click', addTodo);
 todoInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') addTodo();
 });
-
-(async () => {
-  const { data: todos } = await db.from('todos').select('*').order('position');
-  (todos || []).forEach(renderTodo);
-  updatePriorityBadges();
-})();
