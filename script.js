@@ -47,7 +47,7 @@ signupBtn.addEventListener('click', async () => {
   const { error } = await db.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: window.location.origin },
+    options: { emailRedirectTo: window.location.origin + window.location.pathname },
   });
   if (error) { authMessage.textContent = error.message; return; }
   authMessage.textContent = '✉️ 이메일로 인증 링크를 보냈습니다. 인증 후 로그인해주세요.';
