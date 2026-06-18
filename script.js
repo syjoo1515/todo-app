@@ -44,12 +44,16 @@ signupBtn.addEventListener('click', async () => {
     return;
   }
 
-  const { error } = await db.auth.signUp({
+  const { data, error } = await db.auth.signUp({
     email,
     password,
     options: { emailRedirectTo: window.location.origin + window.location.pathname },
   });
   if (error) { authMessage.textContent = error.message; return; }
+  if (data.user?.identities?.length === 0) {
+    authMessage.textContent = '해당 이메일로 등록된 소셜 계정이 존재합니다.';
+    return;
+  }
   authMessage.textContent = '✉️ 이메일로 인증 링크를 보냈습니다. 인증 후 로그인해주세요.';
 });
 
